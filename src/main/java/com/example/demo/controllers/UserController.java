@@ -24,14 +24,16 @@ import com.example.demo.model.requests.CreateUserRequest;
 @RequestMapping("/api/user")
 public class UserController {
     private static final Logger LOGGER = LoggerFactory.getLogger(UserController.class);
-    @Autowired
-    private UserRepository userRepository;
 
-    @Autowired
-    private CartRepository cartRepository;
+    private final UserRepository userRepository;
+    private final CartRepository cartRepository;
+    private final BCryptPasswordEncoder passwordEncoder;
 
-    @Autowired
-    private BCryptPasswordEncoder passwordEncoder;
+    public UserController(UserRepository userRepository, CartRepository cartRepository, BCryptPasswordEncoder passwordEncoder) {
+        this.userRepository = userRepository;
+        this.cartRepository = cartRepository;
+        this.passwordEncoder = passwordEncoder;
+    }
 
     @GetMapping("/id/{id}")
     public ResponseEntity<User> findById(@PathVariable Long id) {
