@@ -9,8 +9,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
+import java.security.Principal;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -22,28 +25,25 @@ import static org.mockito.Mockito.when;
 public class UserControllerTest {
 
     private UserController userController;
-    private final UserRepository userRepo = mock(UserRepository.class);
-    private final CartRepository cartRepo = mock(CartRepository.class);
+    private final UserRepository userRepository = mock(UserRepository.class);
+    private final CartRepository cartRepository = mock(CartRepository.class);
     private final BCryptPasswordEncoder encoder = mock(BCryptPasswordEncoder.class);
 
     @BeforeEach
     public void setUp() {
-        userController = new UserController(userRepo, cartRepo, encoder);
+        userController = new UserController(userRepository, cartRepository, encoder);
     }
 
     @Test
-    public void createUserHappyPath() {
+    public void createUserData() {
         when(encoder.encode("12345678")).thenReturn("whoAmI");
         CreateUserRequest request = new CreateUserRequest();
         request.setUsername("rajaul");
         request.setPassword("12345678");
         request.setConfirmPassword("12345678");
-
         final ResponseEntity<User> response = userController.createUser(request);
-
         assertNotNull(response);
         assertEquals(200, response.getStatusCodeValue());
-
         User user = response.getBody();
         assertNotNull(user);
         assertEquals(0, user.getId());
@@ -51,41 +51,37 @@ public class UserControllerTest {
         assertEquals("whoAmI", user.getPassword());
     }
 
-    private User createUser() {
+    private User createNewUser() {
         User user = new User();
         user.setId(1L);
         user.setUsername("rajaul");
         user.setPassword("12345678");
-
         return user;
     }
 
-    @Test
-    public void validateFindByUsername() {
-        when(userRepo.findByUsername("rajaul")).thenReturn(createUser());
 
+    @Test
+    public void validateUserFindById() {
+        User user = createNewUser();
+        Optional<User> optUser = Optional.of(user);
+        when(userRepository.findById(1L)).thenReturn(optUser);
+        Authentication authentication= SecurityContextHolder.getContext().getAuthentication();
+        final ResponseEntity<User> response = userController.findById(1L,authentication);
+        assertNotNull(response);
+        assertEquals(200, response.getStatusCodeValue());
+        User user1 = response.getBody();
+        assertNotNull(user1);
+        assertEquals(user.getUsername(), user1.getUsername());
+    }
+    @Test
+    public void validateUserFindByUsername() {
+        when(userRepository.findByUsername("rajaul")).thenReturn(createNewUser());
         final ResponseEntity<User> response = userController.findByUserName("rajaul");
         assertNotNull(response);
         assertEquals(200, response.getStatusCodeValue());
-
-        User actualUser = response.getBody();
-        assertNotNull(actualUser);
-        assertEquals("rajaul", actualUser.getUsername());
+        User user1 = response.getBody();
+        assertNotNull(user1);
+        assertEquals("rajaul", user1.getUsername());
     }
 
-    @Test
-    public void validateFindById() {
-        User user = createUser();
-        Optional<User> optUser = Optional.of(user);
-        when(userRepo.findById(1L)).thenReturn(optUser);
-
-        final ResponseEntity<User> response = userController.findById(1L);
-
-        assertNotNull(response);
-        assertEquals(200, response.getStatusCodeValue());
-
-        User actualUser = response.getBody();
-        assertNotNull(actualUser);
-        assertEquals(user.getUsername(), actualUser.getUsername());
-    }
 }

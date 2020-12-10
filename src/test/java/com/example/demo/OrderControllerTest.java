@@ -33,7 +33,7 @@ public class OrderControllerTest {
         orderController = new OrderController(userRepository, orderRepository);
     }
 
-    private User createUser() {
+    private User createNewUser() {
         User user = new User();
         user.setId(1L);
         user.setUsername("rajaul");
@@ -61,8 +61,8 @@ public class OrderControllerTest {
     }
 
     @Test
-    public void validateSubmitOrder() {
-        when(userRepository.findByUsername("rajaul")).thenReturn(createUser());
+    public void submitOrderValidation() {
+        when(userRepository.findByUsername("rajaul")).thenReturn(createNewUser());
 
         final ResponseEntity<UserOrder> response = orderController.submit("rajaul");
 
@@ -74,13 +74,27 @@ public class OrderControllerTest {
         assertEquals("rajaul", orders.getUser().getUsername());
     }
 
-    private List<UserOrder> createUserOrders() {
+    @Test
+    public void validateOrdersForUser() {
+        User user = createNewUser();
+        when(userRepository.findByUsername("rajaul")).thenReturn(user);
+        when(orderRepository.findByUser(user)).thenReturn(createOrdersByUser());
+        final ResponseEntity<List<UserOrder>> response = orderController.getOrdersForUser("rajaul");
+
+        assertNotNull(response);
+        assertEquals(200, response.getStatusCodeValue());
+
+        List<UserOrder> orders = response.getBody();
+        assertNotNull(orders);
+        assertEquals(new BigDecimal("8000.97"), orders.get(1).getTotal());
+    }
+
+    private List<UserOrder> createOrdersByUser() {
         List<UserOrder> userOrders = new ArrayList<>();
         for (long i = 0L; i < 3L; i++) {
             UserOrder order = new UserOrder();
             order.setId(i);
-            order.setUser(createUser());
-
+            order.setUser(createNewUser());
             List<Item> items = new ArrayList<>();
             for (long j = 0L; j < 3L; j++) {
                 Item item = new Item();
@@ -91,26 +105,10 @@ public class OrderControllerTest {
                 items.add(item);
             }
             order.setItems(items);
-
             order.setTotal(new BigDecimal("8000.97"));
-
             userOrders.add(order);
         }
         return userOrders;
     }
 
-    @Test
-    public void validateGetOrdersForUser() {
-        User user = createUser();
-        when(userRepository.findByUsername("rajaul")).thenReturn(user);
-        when(orderRepository.findByUser(user)).thenReturn(createUserOrders());
-        final ResponseEntity<List<UserOrder>> response = orderController.getOrdersForUser("rajaul");
-
-        assertNotNull(response);
-        assertEquals(200, response.getStatusCodeValue());
-
-        List<UserOrder> orders = response.getBody();
-        assertNotNull(orders);
-        assertEquals(new BigDecimal("8000.97"), orders.get(1).getTotal());
-    }
 }

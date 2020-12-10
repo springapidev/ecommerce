@@ -30,7 +30,7 @@ public class ItemControllerTest {
         itemController = new ItemController(itemRepository);
     }
 
-    private Item createItem() {
+    private Item createNewItem() {
         Item item = new Item();
 
         item.setId(1L);
@@ -43,47 +43,39 @@ public class ItemControllerTest {
 
     @Test
     public void validateGetItemById() {
-        Item item = createItem();
+        Item item = createNewItem();
         when(itemRepository.findById(1L)).thenReturn(Optional.of(item));
-
         final ResponseEntity<Item> response = itemController.getItemById(1L);
-
         assertNotNull(response);
         assertEquals(200, response.getStatusCodeValue());
-
         Item item1 = response.getBody();
         assertNotNull(item1);
         assertEquals("Drone", item1.getName());
     }
-
     @Test
-    public void validateGetItemsByName() {
-        Item item = createItem();
+    public void checkGetItems() {
+        Item item = createNewItem();
         List<Item> items = new ArrayList<>(Arrays.asList(item, item, item));
-        when(itemRepository.findByName("Drone")).thenReturn(items);
-
-        final ResponseEntity<List<Item>> response = itemController.getItemsByName("Drone");
-
+        when(itemRepository.findAll()).thenReturn(items);
+        final ResponseEntity<List<Item>> response = itemController.getItems();
         assertNotNull(response);
         assertEquals(200, response.getStatusCodeValue());
-
+        List<Item> itemList = response.getBody();
+        assertNotNull(itemList);
+        assertEquals(item.getPrice(), itemList.get(1).getPrice());
+    }
+    @Test
+    public void checkGetItemsByName() {
+        Item item = createNewItem();
+        List<Item> items = new ArrayList<>(Arrays.asList(item, item, item));
+        when(itemRepository.findByName("Drone")).thenReturn(items);
+        final ResponseEntity<List<Item>> response = itemController.getItemsByName("Drone");
+        assertNotNull(response);
+        assertEquals(200, response.getStatusCodeValue());
         List<Item> itemList = response.getBody();
         assertNotNull(itemList);
         assertEquals("Drone", itemList.get(0).getName());
     }
 
-    @Test
-    public void validateGetItems() {
-        Item item = createItem();
-        List<Item> items = new ArrayList<>(Arrays.asList(item, item, item));
-        when(itemRepository.findAll()).thenReturn(items);
 
-        final ResponseEntity<List<Item>> response = itemController.getItems();
-        assertNotNull(response);
-        assertEquals(200, response.getStatusCodeValue());
-
-        List<Item> itemList = response.getBody();
-        assertNotNull(itemList);
-        assertEquals(item.getPrice(), itemList.get(1).getPrice());
-    }
 }

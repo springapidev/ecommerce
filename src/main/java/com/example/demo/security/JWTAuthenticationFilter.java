@@ -29,7 +29,7 @@ public class JWTAuthenticationFilter extends UsernamePasswordAuthenticationFilte
     private static final Logger LOGGER = LoggerFactory.getLogger(JWTAuthenticationFilter.class);
 
     public JWTAuthenticationFilter(AuthenticationManager authenticationManager) {
-        this.authenticationManager = authenticationManager;
+               this.authenticationManager = authenticationManager;
     }
 
     @Override
@@ -45,7 +45,7 @@ public class JWTAuthenticationFilter extends UsernamePasswordAuthenticationFilte
                             new ArrayList<>())
             );
         } catch (IOException e) {
-            LOGGER.error("Found an IOException error: Throwing Runtime exception");
+            LOGGER.error("Found an IOException error: Bad Credentials");
             throw new RuntimeException(e);
         }
     }
